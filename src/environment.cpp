@@ -49,8 +49,12 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     // DONE:: Create point processor
     auto cloud = pLidar->scan();
     // renderRays(viewer, pLidar->position, cloud);
-    renderPointCloud(viewer, cloud, "cloud");
+    // renderPointCloud(viewer, cloud, "cloud");
 
+    ProcessPointClouds<pcl::PointXYZ> process;
+    auto segmentedCloud = process.SegmentPlane(cloud, 100, .2);
+    renderPointCloud(viewer, segmentedCloud.first, "Obstructions", Color(1, 0, 0));
+    renderPointCloud(viewer, segmentedCloud.second, "Plane", Color(0, 1, 0));
 }
 
 
