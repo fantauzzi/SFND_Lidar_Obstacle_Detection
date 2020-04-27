@@ -84,8 +84,7 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
         int pick = distribution(generator);
         int second_pick = pick;
         int third_pick = pick;
-        while (second_pick == pick)pwd
-        
+        while (second_pick == pick)
             second_pick = distribution(generator);
         while (third_pick == pick || third_pick == second_pick)
             third_pick = distribution(generator);
