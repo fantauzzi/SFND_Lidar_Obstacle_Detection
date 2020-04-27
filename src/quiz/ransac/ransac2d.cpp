@@ -46,7 +46,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr CreateData() {
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr CreateData3D() {
     ProcessPointClouds<pcl::PointXYZ> pointProcessor;
-    return pointProcessor.loadPcd("/home/fanta/workspace/SFND_Lidar_Obstacle_Detection/src/sensors/data/pcd");
+    return pointProcessor.loadPcd("/home/fanta/workspace/SFND_Lidar_Obstacle_Detection/src/sensors/data/pcd/simpleHighway.pcd");
     // return pointProcessor.loadPcd("../../../sensors/data/pcd/simpleHighway.pcd");
 }
 
@@ -79,12 +79,13 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
     std::unordered_set<int> &best = inliersResult2;
 
     for (int iter = 0; iter < maxIterations; ++iter) {
-        std::cout << "Iteration# " << iter << std::endl;
+        // std::cout << "Iteration# " << iter << std::endl;
         // Fetch two random points from the cloud, without repetition (repetition would produce a division by zero below)
         int pick = distribution(generator);
         int second_pick = pick;
         int third_pick = pick;
-        while (second_pick == pick)
+        while (second_pick == pick)pwd
+        
             second_pick = distribution(generator);
         while (third_pick == pick || third_pick == second_pick)
             third_pick = distribution(generator);
