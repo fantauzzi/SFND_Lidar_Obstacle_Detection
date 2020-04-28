@@ -46,6 +46,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr CreateData(std::vector<std::vector<float>> p
 
 void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Box window, int& iteration, uint depth=0)
 {
+    const double radius = .1;
 
 	if(node!=NULL)
 	{
@@ -54,7 +55,11 @@ void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Bo
 		// split on x axis
 		if(depth%2==0)
 		{
-			viewer->addLine(pcl::PointXYZ(node->point[0], window.y_min, 0),pcl::PointXYZ(node->point[0], window.y_max, 0),0,0,1,"line"+std::to_string(iteration));
+			viewer->addLine(pcl::PointXYZ(node->point[0], window.y_min, 0),
+			        pcl::PointXYZ(node->point[0], window.y_max, 0),
+			        0,0,1,
+			        "line"+std::to_string(iteration));
+			viewer->addSphere(pcl::PointXYZ(node->point[0], node->point[1], 0), radius, "sphere"+std::to_string(iteration));
 			lowerWindow.x_max = node->point[0];
 			upperWindow.x_min = node->point[0];
 		}
@@ -62,6 +67,7 @@ void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Bo
 		else
 		{
 			viewer->addLine(pcl::PointXYZ(window.x_min, node->point[1], 0),pcl::PointXYZ(window.x_max, node->point[1], 0),1,0,0,"line"+std::to_string(iteration));
+            viewer->addSphere(pcl::PointXYZ(node->point[0], node->point[1], 0), radius, "sphere"+std::to_string(iteration));
 			lowerWindow.y_max = node->point[1];
 			upperWindow.y_min = node->point[1];
 		}
