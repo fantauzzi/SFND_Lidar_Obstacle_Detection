@@ -78,10 +78,10 @@ public:
             // Consider the children, schedule them for processing or prune them as necessary
             int childDim = (dimension + 1) % n_dimensions;
             auto pLeft = pCurrent->left;
-            if (pLeft && pLeft->point[dimension] >= target[dimension]-distanceTol)
+            if (pLeft && pCurrent->point[dimension] >= target[dimension]-distanceTol)
                 pending.emplace(std::make_pair(pLeft, childDim));
             auto pRight = pCurrent->right;
-            if (pRight && pRight->point[dimension] <= target[dimension]+distanceTol)
+            if (pRight && pCurrent->point[dimension] <= target[dimension]+distanceTol)
                 pending.emplace(std::make_pair(pRight, childDim));
         }
 
