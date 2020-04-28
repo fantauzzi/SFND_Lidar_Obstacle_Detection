@@ -7,6 +7,7 @@
 #include "processPointClouds.h"
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
+#include "processing.h"
 #include <memory>
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr &viewer) {
@@ -113,11 +114,17 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = processor.loadPcd(
             "../src/sensors/data/pcd/data_1/0000000000.pcd");
 
-    auto filteredCloud = processor.FilterCloud(inputCloud, .1, Eigen::Vector4f(-20, -15, -10, 1),
-                                               Eigen::Vector4f(30, 15, 10, 1));
+    auto filteredCloud = processor.FilterCloud(inputCloud, .1, Eigen::Vector4f(-20, -10, -10, 1),
+                                               Eigen::Vector4f(40, 10, 10, 1));
     renderPointCloud(viewer, filteredCloud, "filterCloud");
 
     // renderPointCloud(viewer,inputCloud,"inputCloud");
+
+    // auto segmentedCloud = processor.SegmentPlane(filteredCloud, 100, .2);
+    auto segmentedCloud = ransacPlane<pcl::PointXYZI>(filteredCloud, 100, .2);
+    // renderPointCloud(viewer, segmentedCloud.first, "Obstructions", Color(1, 0, 0));
+    renderPointCloud(viewer, segmentedCloud.second, "Plane", Color(0, 1, 0));
+
 }
 
 

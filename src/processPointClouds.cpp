@@ -1,6 +1,10 @@
 // PCL lib Functions for processing point clouds 
 
 #include "processPointClouds.h"
+#include <unordered_set>
+#include <random>
+#include <cmath>
+#include <algorithm>
 
 
 //constructor:
