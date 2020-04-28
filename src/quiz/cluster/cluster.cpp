@@ -83,13 +83,14 @@ euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, fl
 
     // DONE: Fill out this function to return list of indices for each cluster
 
+    // Will collect the result
     std::vector<std::vector<int>> clusters;
-    std::set<int> processed_points;
+    // Keeps note for each node if already processed
+    std::vector<bool> processed(points.size(), false);
 
     for (int point_id = 0; point_id < points.size(); ++point_id) {
-        // auto point = points[id];
         // Skip the point if already processed
-        if (processed_points.find(point_id) != processed_points.end())
+        if (processed[point_id])
             continue;
         /* Queue of ids of points in the same cluster as the current point (cluster_id);
          * invariant: it only contains points not yet processed (not in processed_points) */
@@ -100,13 +101,13 @@ euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, fl
             // Pop one, mark it as processed and add it to the current cluster
             auto processing_id = *pending.begin();
             pending.erase(pending.begin());
-            processed_points.emplace(processing_id);
+            processed[processing_id] = true;
             cluster.emplace_back(processing_id);
             // Find all ids of nodes that are within distance tolerance from it
             auto neighbors = tree->search(points[processing_id], distanceTol);
             // If not yet processed, schedule them for processing
             for (const auto &neighbor: neighbors)
-                if (processed_points.find(neighbor) == processed_points.end())
+                if (! processed[neighbor])
                     pending.emplace(neighbor);
         }
         // Append the just built cluster to the sequence of clusters that will be returned
