@@ -104,6 +104,6 @@ Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float dist
     // Return the two clouds, with inliers and outliers
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     inliers->indices = best;
-    auto pair_of_clouds = separateClouds<pcl::PointXYZI>(inliers, cloud);
+    std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr>  pair_of_clouds = separateClouds<typename pcl::PointXYZI>(inliers, cloud);
     return pair_of_clouds;
 }

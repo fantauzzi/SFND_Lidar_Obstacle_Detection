@@ -77,11 +77,13 @@ ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers,
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);
     extract.setNegative(false);
-    auto plane_cloud_p(new pcl::PointCloud<PointT>);
+    typename pcl::PointCloud<PointT>::Ptr plane_cloud_p(new pcl::PointCloud<PointT>());
     extract.filter(*plane_cloud_p);
+
     extract.setNegative(true);
-    auto obstacles_cloud_p(new pcl::PointCloud<PointT>);
+    typename  pcl::PointCloud<PointT>::Ptr obstacles_cloud_p(new pcl::PointCloud<PointT>());
     extract.filter(*obstacles_cloud_p);
+    // auto segResult = std::make_pair(obstacles_cloud_p, plane_cloud_p);
 
     std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(obstacles_cloud_p,
                                                                                                       plane_cloud_p);

@@ -49,12 +49,12 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     auto pLidar = std::make_unique<Lidar>(cars, 0);
 
     // DONE:: Create point processor
-    auto cloud = pLidar->scan();
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = pLidar->scan();
     // renderRays(viewer, pLidar->position, cloud);
     // renderPointCloud(viewer, cloud, "cloud");
 
     ProcessPointClouds<pcl::PointXYZ> process;
-    auto segmentedCloud = process.SegmentPlane(cloud, 100, .2);
+    std::pair<typename pcl::PointCloud<pcl::PointXYZ>::Ptr, typename pcl::PointCloud<pcl::PointXYZ>::Ptr> segmentedCloud = process.SegmentPlane(cloud, 100, .2);
     // renderPointCloud(viewer, segmentedCloud.first, "Obstructions", Color(1, 0, 0));
     renderPointCloud(viewer, segmentedCloud.second, "Plane", Color(0, 1, 0));
 
@@ -134,13 +134,13 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer,
 
     Timer theTimer;
     // Filter the point cloud to remove points belonging to the car with lidar and outside the road
-    auto filteredCloud = processor.FilterCloud(inputCloud, .1, Eigen::Vector4f(-20, -6.5, -2, 1),
+    pcl::PointCloud<pcl::PointXYZI>::Ptr filteredCloud = processor.FilterCloud(inputCloud, .1, Eigen::Vector4f(-20, -6.5, -2, 1),
                                                Eigen::Vector4f(40, 7.1, 2, 1));
 
     std::cout << "Filtering took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
 
     // Detect the road (plane) in the point cloud
-    auto segmentedCloud = Ransac(filteredCloud, 100, .2);
+    std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr > segmentedCloud = Ransac(filteredCloud, 100, .2);
 
     std::cout << "Segmentation took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
 
