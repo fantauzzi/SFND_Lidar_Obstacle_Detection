@@ -7,8 +7,6 @@
 std::vector<std::vector<int>>
 euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, float distanceTol, int minSize = 0) {
 
-    // DONE: Fill out this function to return list of indices for each cluster
-
     // Will collect the result
     std::vector<std::vector<int>> clusters;
     // Keeps note for each node if already processed
@@ -18,7 +16,7 @@ euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, fl
         // Skip the point if already processed
         if (processed[point_id])
             continue;
-        /* Queue of ids of points in the same cluster as the current point (cluster_id);
+        /* Set of ids of points in the same cluster as the current point (cluster_id);
          * invariant: it only contains points not yet processed (not in processed_points) */
         std::set<int> pending;
         pending.emplace(point_id);
@@ -56,7 +54,7 @@ Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float dist
     /* Keep a set with the best result so far, and a separate working set. Will swap between the two when the
      * working set turns out to be better than the other set; it prevents unnecessary copying of the set.
      * Note: an alternative viable implementation is to keep track of the best set so far by storing only its
-     * two representative points, as opposed to the whole set of inliners. */
+     * two/three representative points, as opposed to the whole set of inliners. */
     std::vector<int> inliersResult1;
     std::vector<int> inliersResult2;
     std::vector<int> &working = inliersResult1;
@@ -64,7 +62,7 @@ Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float dist
 
     for (int iter = 0; iter < maxIterations; ++iter) {
         // std::cout << "Iteration# " << iter << std::endl;
-        // Fetch two random points from the cloud, without repetition (repetition would produce a division by zero below)
+        // Fetch three random points from the cloud, without repetition (repetition would produce a division by zero below)
         int pick = distribution(generator);
         int second_pick = pick;
         int third_pick = pick;
@@ -97,12 +95,13 @@ Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float dist
             if (dist <= distanceTol)
                 working.emplace_back(point_idx);
         }
-        // Keep track of the best (iter.e. biggest) set of inliners so far
+        // Keep track of the best (i.e. biggest) set of inliners so far
         if (working.size() > best.size())
             std::swap(working, best);
         working.clear();
     }
 
+    // Return the two clouds, with inliers and outliers
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     inliers->indices = best;
     auto pair_of_clouds = separateClouds<pcl::PointXYZI>(inliers, cloud);

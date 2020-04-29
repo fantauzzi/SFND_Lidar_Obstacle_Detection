@@ -30,18 +30,14 @@ ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cl
                                         Eigen::Vector4f minPoint,
                                         Eigen::Vector4f maxPoint) {
 
-    // Time segmentation process
-    // auto startTime = std::chrono::steady_clock::now();
-
-    // DONE:: Fill in the function to do voxel grid point reduction and region based filtering
-
-    // Create the filtering object
+    // Filter based on resolution
     typename pcl::PointCloud<PointT>::Ptr cloudFiltered(new pcl::PointCloud<PointT>);
     pcl::VoxelGrid<PointT> sor;
     sor.setInputCloud(cloud);
     sor.setLeafSize(filterRes, filterRes, filterRes);
     sor.filter(*cloudFiltered);
 
+    // Filter (crop) based on bounding box
     typename pcl::PointCloud<PointT>::Ptr cloudFilteredCropped(new pcl::PointCloud<PointT>);
     pcl::CropBox<PointT> cropBox(true);
     cropBox.setMin(minPoint);
@@ -49,6 +45,7 @@ ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cl
     cropBox.setInputCloud(cloudFiltered);
     cropBox.filter(*cloudFilteredCropped);
 
+    // Filter points belonging to the car with the lidar
     std::vector<int> indices;
     pcl::CropBox<PointT> car(true);
     car.setMin(Eigen::Vector4f(-1.5, -1.7, -1, 1));
@@ -56,6 +53,7 @@ ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cl
     car.setInputCloud(cloudFilteredCropped);
     car.filter(indices);
 
+    // Return a PCL cloud with the points that passed the filters
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     for (int point: indices)
         inliers->indices.push_back(point);
@@ -66,12 +64,7 @@ ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cl
     extract.setNegative(true);
     extract.filter(*cloudFilteredCropped);
 
-    // auto endTime = std::chrono::steady_clock::now();
-    // auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    // std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
-
     return cloudFilteredCropped;
-
 }
 
 
@@ -79,7 +72,7 @@ template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr>
 ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers,
                                            typename pcl::PointCloud<PointT>::Ptr cloud) {
-    // DONE: Create two new point clouds, one cloud with obstacles and other with segmented plane
+    // Create two new point clouds, one cloud with obstacles and other with segmented plane
     pcl::ExtractIndices<PointT> extract;
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);

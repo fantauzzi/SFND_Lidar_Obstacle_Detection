@@ -12,13 +12,13 @@
 std::vector<std::vector<int>>
 euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, float distanceTol, int minSize);
 
-std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr> Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float distanceTol);
+std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr>
+Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float distanceTol);
 
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr>
 separateClouds(pcl::PointIndices::Ptr inliers,
                typename pcl::PointCloud<PointT>::Ptr cloud) {
-    // DONE: Create two new point clouds, one cloud with obstacles and other with segmented plane
     pcl::ExtractIndices<PointT> extract;
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);
@@ -47,7 +47,7 @@ ransacPlane(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations,
     pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
     // Create the segmentation object
-    pcl::SACSegmentation<PointT> seg;
+    pcl::SACSegmentation <PointT> seg;
     // Optional
     seg.setOptimizeCoefficients(true);
     // Mandatory

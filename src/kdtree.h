@@ -11,11 +11,11 @@ float sq_dist(const std::vector<float> &v1, const std::vector<float> &v2);
 struct Node;
 
 struct KdTree {
-private:
-    const int n_dimensions = 3;
-public:
     Node *root;
     KdTree();
     void insert(std::vector<float> point, int id);
     std::vector<int> search(std::vector<float> target, float distanceTol);
+private:
+    // Number of point dimensions; it does not include the intensity channel, even if present.
+    const int n_dimensions = 3;
 };
