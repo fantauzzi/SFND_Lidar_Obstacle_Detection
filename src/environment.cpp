@@ -105,6 +105,24 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr &vi
         viewer->addCoordinateSystem(1.0);
 }
 
+class Timer {
+    std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
+public:
+    std::chrono::duration<double> elapsed() const {
+        return std::chrono::steady_clock::now() - startTime;
+    }
+
+    void reset() {
+        startTime = std::chrono::steady_clock::now();
+    }
+
+    long fetch_and_restart() {
+        auto savedStart = startTime;
+        reset();
+        std::chrono::duration<double, std::milli> res = std::chrono::steady_clock::now() - savedStart;
+        return res.count();
+    }
+};
 
 void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     // ----------------------------------------------------
@@ -115,43 +133,49 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = processor.loadPcd(
             "../src/sensors/data/pcd/data_1/0000000000.pcd");
 
+    Timer theTimer;
     auto filteredCloud = processor.FilterCloud(inputCloud, .1, Eigen::Vector4f(-20, -10, -10, 1),
                                                Eigen::Vector4f(40, 10, 10, 1));
-    // renderPointCloud(viewer, filteredCloud, "filterCloud");
 
-    // renderPointCloud(viewer,inputCloud,"inputCloud");
+    std::cout << "Filtering took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
 
-    // auto segmentedCloud = processor.SegmentPlane(filteredCloud, 100, .2);
-    auto segmentedCloud = ransacPlane<pcl::PointXYZI>(filteredCloud, 100, .2);
-    // renderPointCloud(viewer, segmentedCloud.first, "Obstructions", Color(1, 0, 0));
+    auto segmentedCloud = Ransac(filteredCloud, 100, .2);
+
+    std::cout << "Segmentation took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
+
     renderPointCloud(viewer, segmentedCloud.second, "Plane", Color(0, 1, 0));
 
-    ////////////////////////////////
-    std::vector<std::vector<float>> points;
+    theTimer.fetch_and_restart();
 
+    std::vector<std::vector<float>> points(segmentedCloud.first->size());
     // typedef std::vector<pcl::PointXYZI, Eigen::aligned_allocator<pcl::PointXYZI>> PointsVector;
-
-    for (const auto &point: *segmentedCloud.first) {
-        std::vector<float> vect_point{point.x, point.y, point.z, point.intensity};
-        points.emplace_back(vect_point);
+    for (int i = 0; i < segmentedCloud.first->size(); ++i) {
+        auto & source_point = segmentedCloud.first->points[i];
+        std::vector<float> point_vec = {source_point.x, source_point.y, source_point.z, source_point.intensity};
+        points[i] = point_vec;
     }
 
-    KdTree *tree = new KdTree;
+    auto *tree = new KdTree;
 
     for (int i = 0; i < points.size(); i++)
         tree->insert(points[i], i);
 
-    std::vector<std::vector<int>> clusters_vec = euclideanCluster(points, tree, .2);
+    std::cout << "Building the KD_tree took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
+
+    std::vector<std::vector<int>> clusters_vec = euclideanCluster(points, tree, .2, 50);
+
+    std::cout << "Clustering took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
+
     // typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > VectorType;
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters;
     for (const auto &cluster_vec: clusters_vec) {
         typename pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZI>);
         for (const auto &index: cluster_vec) {
             pcl::PointXYZI newPoint;
-            newPoint.x = segmentedCloud.first->points[index].x;
-            newPoint.y = segmentedCloud.first->points[index].y;
-            newPoint.z = segmentedCloud.first->points[index].z;
-            newPoint.intensity = segmentedCloud.first->points[index].intensity;
+            newPoint.x = points[index][0];
+            newPoint.y = points[index][1];
+            newPoint.z = points[index][2];
+            newPoint.intensity = points[index][3];
             cloud_cluster->points.emplace_back(newPoint);
         }
         cloud_cluster->height = 1;
@@ -160,8 +184,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer) {
         cloudClusters.emplace_back(cloud_cluster);
     }
 
-    /////////////////////////////////
-
+    std::cout << "Handling the clustering output " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
 
     std::cout << "Got " << cloudClusters.size() << " cluster(s)." << std::endl;
     int clusterId = 0;
@@ -170,12 +193,11 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloudClusters) {
         std::cout << "cluster size ";
         processor.numPoints(cluster);
-        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), colors[clusterId%colors.size()]);
+        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), colors[clusterId % colors.size()]);
         Box box = processor.BoundingBox(cluster);
         renderBox(viewer, box, clusterId);
         ++clusterId;
     }
-
 }
 
 

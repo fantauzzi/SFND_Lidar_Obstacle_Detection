@@ -31,7 +31,7 @@ ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cl
                                         Eigen::Vector4f maxPoint) {
 
     // Time segmentation process
-    auto startTime = std::chrono::steady_clock::now();
+    // auto startTime = std::chrono::steady_clock::now();
 
     // DONE:: Fill in the function to do voxel grid point reduction and region based filtering
 
@@ -66,9 +66,9 @@ ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cl
     extract.setNegative(true);
     extract.filter(*cloudFilteredCropped);
 
-    auto endTime = std::chrono::steady_clock::now();
-    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
+    // auto endTime = std::chrono::steady_clock::now();
+    // auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    // std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
 
     return cloudFilteredCropped;
 

@@ -1,16 +1,16 @@
-#include "kdtree.h"
-
 /* \author Aaron Brown */
 // Quiz on implementing kd tree
 
+#include "kdtree.h"
 #include <queue>
 #include <cmath>
 
 float sq_dist(const std::vector<float> &v1, const std::vector<float> &v2) {
-    float total = 0;
-    for (int dim = 0; dim < v1.size(); ++dim)
-        total += pow(v1[dim] - v2[dim], 2);
-    return total;
+    float diff_x = v1[0]-v2[0];
+    float diff_y = v1[1]-v2[1];
+    float diff_z = v1[2]-v2[2];
+    float res = diff_x*diff_x+diff_y*diff_y+diff_z*diff_z;
+    return res;
 }
 
 // Structure to represent node of kd tree

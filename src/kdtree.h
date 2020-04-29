@@ -4,7 +4,6 @@
 #pragma once
 
 #include <queue>
-#include <cmath>
 
 float sq_dist(const std::vector<float> &v1, const std::vector<float> &v2);
 
@@ -13,7 +12,7 @@ struct Node;
 
 struct KdTree {
 private:
-    const int n_dimensions = 4;
+    const int n_dimensions = 3;
 public:
     Node *root;
     KdTree();

@@ -8,6 +8,9 @@ set(CXX_FLAGS "-Wall")
 
 set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+
 project(playback)
 
 find_package(PCL 1.2 REQUIRED)

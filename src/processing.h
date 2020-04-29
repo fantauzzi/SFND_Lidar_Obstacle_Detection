@@ -4,12 +4,15 @@
 #include "kdtree.h"
 #include <algorithm>
 #include <chrono>
+#include <unordered_set>
 #include <pcl/common/projection_matrix.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
 
 std::vector<std::vector<int>>
-euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, float distanceTol);
+euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, float distanceTol, int minSize);
+
+std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr> Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float distanceTol);
 
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr>
