@@ -4,7 +4,6 @@
 #include "kdtree.h"
 #include <queue>
 #include <cmath>
-#include <cstddef>
 
 /** Returns the square Euclidean distance between two points. Points must have at least 3 dimensions; any dimension
  * after the 3rd is ignored (e.g. the I in an RGBI point).
@@ -28,11 +27,11 @@ struct Node {
     Node *right;
 
     Node(std::vector<float> arr, int setId)
-            : point(arr), id(setId), left(NULL), right(NULL) {}
+            : point(arr), id(setId), left(nullptr), right(nullptr) {}
 };
 
 
-KdTree::KdTree() : root(NULL) {};
+KdTree::KdTree() : root(nullptr) {};
 
 /** Insert a new node in the right place in the KD-tree
  * @param point  The point to be inserted; it may have more than 3 dimensions, but only the first 3 dimensions will

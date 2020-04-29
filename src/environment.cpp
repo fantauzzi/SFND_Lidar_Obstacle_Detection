@@ -11,6 +11,7 @@
 #include <pcl/impl/point_types.hpp>
 #include <memory>
 #include <thread>
+#include <assert.h>
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr &viewer) {
 
@@ -134,18 +135,25 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer,
     // ----------------------------------------------------
 
     Timer theTimer;
+    // --------------------------------------------------------------------------------------------
     // Filter the point cloud to remove points belonging to the car with lidar and outside the road
+    // --------------------------------------------------------------------------------------------
     pcl::PointCloud<pcl::PointXYZI>::Ptr filteredCloud = processor.FilterCloud(inputCloud, .2, Eigen::Vector4f(-20, -6.5, -2, 1),
                                                Eigen::Vector4f(40, 7.1, 2, 1));
 
     std::cout << "Filtering took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
 
+    // --------------------------------------------------------------------------------------------
     // Detect the road (plane) in the point cloud
+    // --------------------------------------------------------------------------------------------
     std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr > segmentedCloud = Ransac(filteredCloud, 100, .2);
 
     std::cout << "Segmentation took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
 
-    // Drow the points belonging to the road, in green
+    std::cout << "obstacle points/total points = " << static_cast<float>(segmentedCloud.first->size())/(segmentedCloud.first->size()+segmentedCloud.second->size()) << std::endl;
+    assert(segmentedCloud.first->size()+segmentedCloud.second->size()==filteredCloud->size());
+
+    // Draw the points belonging to the road, in green
     renderPointCloud(viewer, segmentedCloud.second, "Plane", Color(0, 1, 0));
 
     theTimer.fetch_and_restart();
@@ -169,7 +177,9 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer,
 
     std::cout << "Building the KD-tree took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
 
+    // --------------------------------------------------------------------------------------------
     // Cluster points belonging to obstacles
+    // --------------------------------------------------------------------------------------------
     std::vector<std::vector<int>> clusters_vec = euclideanCluster(points, tree, .3, 30);
 
     std::cout << "Clustering took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;

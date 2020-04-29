@@ -2,6 +2,8 @@
 #include "kdtree.h"
 #include <unordered_set>
 #include <random>
+#include <cassert>
+#include <cmath>
 
 
 std::vector<std::vector<int>>
@@ -43,9 +45,9 @@ euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, fl
 }
 
 std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr>
-Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float distanceTol) {
+Ransac(const pcl::PointCloud<pcl::PointXYZI>::Ptr & cloud, int maxIterations, float distanceTol) {
 
-    srand(time(NULL));
+    // srand(time(NULL));
 
     // Used to sample points from the cloud
     std::default_random_engine generator;
@@ -71,39 +73,46 @@ Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float dist
         while (third_pick == pick || third_pick == second_pick)
             third_pick = distribution(generator);
 
-        auto x1 = cloud->points[pick].x;
-        auto y1 = cloud->points[pick].y;
-        auto z1 = cloud->points[pick].z;
-        auto x2 = cloud->points[second_pick].x;
-        auto y2 = cloud->points[second_pick].y;
-        auto z2 = cloud->points[second_pick].z;
-        auto x3 = cloud->points[third_pick].x;
-        auto y3 = cloud->points[third_pick].y;
-        auto z3 = cloud->points[third_pick].z;
-        auto i = (y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1);
-        auto j = (z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1);
-        auto k = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
-        auto a = i;
-        auto b = j;
-        auto c = k;
-        auto d = -(i * x1 + j * y1 + k * z1);
-        auto denominator = sqrt(a * a + b * b + c * c);
+        float x1 = cloud->points[pick].x;
+        float y1 = cloud->points[pick].y;
+        float z1 = cloud->points[pick].z;
+        float x2 = cloud->points[second_pick].x;
+        float y2 = cloud->points[second_pick].y;
+        float z2 = cloud->points[second_pick].z;
+        float x3 = cloud->points[third_pick].x;
+        float y3 = cloud->points[third_pick].y;
+        float z3 = cloud->points[third_pick].z;
+        float i = (y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1);
+        float j = (z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1);
+        float k = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+        float a = i;
+        float b = j;
+        float c = k;
+        float d = -(i * x1 + j * y1 + k * z1);
+        float denominator = std::sqrt(a * a + b * b + c * c);
         // Build the vector of inliners for the two sample points and the given max distance
-        for (int point_idx = 0; point_idx < cloud->size(); ++point_idx) {
-            auto point = (*cloud)[point_idx];
-            auto dist = abs(a * point.x + b * point.y + c * point.z + d) / denominator;
+        // for (int point_idx = 0; point_idx < cloud->size(); ++point_idx) {
+        int point_idx = -1;
+        for (auto point: cloud->points) {
+            ++point_idx;
+            // pcl::PointXYZI point = (*cloud)[point_idx];
+            float dist = std::abs(a * point.x + b * point.y + c * point.z + d) / denominator;
             if (dist <= distanceTol)
                 working.emplace_back(point_idx);
         }
         // Keep track of the best (i.e. biggest) set of inliners so far
-        if (working.size() > best.size())
+        if (working.size() > best.size()) {
+            std::cout << "RANSAC-1: obstacle points/total points = " << static_cast<float>(cloud->size()-working.size())/cloud->size() << std::endl;
             std::swap(working, best);
+        }
         working.clear();
     }
+    std::cout << "RANSAC-2: obstacle points/total points = " << static_cast<float>(cloud->size()-best.size())/cloud->size() << std::endl;
 
     // Return the two clouds, with inliers and outliers
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     inliers->indices = best;
     std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr>  pair_of_clouds(separateClouds<typename pcl::PointXYZI>(inliers, cloud));
+    assert(cloud->size() == pair_of_clouds.first->size()+pair_of_clouds.second->size());
     return pair_of_clouds;
 }

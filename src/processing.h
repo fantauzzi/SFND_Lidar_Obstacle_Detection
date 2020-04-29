@@ -13,7 +13,7 @@ std::vector<std::vector<int>>
 euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, float distanceTol, int minSize);
 
 std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr>
-Ransac(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, int maxIterations, float distanceTol);
+Ransac(const pcl::PointCloud<pcl::PointXYZI>::Ptr & cloud, int maxIterations, float distanceTol);
 
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr>
@@ -29,8 +29,9 @@ separateClouds(pcl::PointIndices::Ptr inliers,
     typename pcl::PointCloud<PointT>::Ptr obstacles_cloud_p(new pcl::PointCloud<PointT>);
     extract.filter(*obstacles_cloud_p);
 
-    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(obstacles_cloud_p,
-                                                                                                      plane_cloud_p);
+    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(obstacles_cloud_p, plane_cloud_p);
+    assert(inliers->indices.size()==segResult.second->size());
+    assert(segResult.second->size()+segResult.first->size()==cloud->size());
     return segResult;
 }
 
