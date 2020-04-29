@@ -1,8 +1,6 @@
 #include "processing.h"
 #include "kdtree.h"
-#include <unordered_set>
 #include <random>
-#include <cassert>
 #include <cmath>
 
 
@@ -56,7 +54,7 @@ Ransac(const pcl::PointCloud<pcl::PointXYZI>::Ptr & cloud, int maxIterations, fl
     /* Keep a set with the best result so far, and a separate working set. Will swap between the two when the
      * working set turns out to be better than the other set; it prevents unnecessary copying of the set.
      * Note: an alternative viable implementation is to keep track of the best set so far by storing only its
-     * two/three representative points, as opposed to the whole set of inliners. */
+     * two/three representative points, as opposed to the whole set of inliers. */
     std::vector<int> inliersResult1;
     std::vector<int> inliersResult2;
     std::vector<int> &working = inliersResult1;
@@ -90,7 +88,7 @@ Ransac(const pcl::PointCloud<pcl::PointXYZI>::Ptr & cloud, int maxIterations, fl
         float c = k;
         float d = -(i * x1 + j * y1 + k * z1);
         float denominator = std::sqrt(a * a + b * b + c * c);
-        // Build the vector of inliners for the two sample points and the given max distance
+        // Build the vector of inliers for the two sample points and the given max distance
         // for (int point_idx = 0; point_idx < cloud->size(); ++point_idx) {
         int point_idx = -1;
         for (auto point: cloud->points) {
@@ -100,19 +98,16 @@ Ransac(const pcl::PointCloud<pcl::PointXYZI>::Ptr & cloud, int maxIterations, fl
             if (dist <= distanceTol)
                 working.emplace_back(point_idx);
         }
-        // Keep track of the best (i.e. biggest) set of inliners so far
+        // Keep track of the best (i.e. biggest) set of inliers so far
         if (working.size() > best.size()) {
-            std::cout << "RANSAC-1: obstacle points/total points = " << static_cast<float>(cloud->size()-working.size())/cloud->size() << std::endl;
             std::swap(working, best);
         }
         working.clear();
     }
-    std::cout << "RANSAC-2: obstacle points/total points = " << static_cast<float>(cloud->size()-best.size())/cloud->size() << std::endl;
 
     // Return the two clouds, with inliers and outliers
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
     inliers->indices = best;
     std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, typename pcl::PointCloud<pcl::PointXYZI>::Ptr>  pair_of_clouds(separateClouds<typename pcl::PointXYZI>(inliers, cloud));
-    assert(cloud->size() == pair_of_clouds.first->size()+pair_of_clouds.second->size());
     return pair_of_clouds;
 }
