@@ -10,6 +10,7 @@
 #include "processing.h"
 #include <pcl/impl/point_types.hpp>
 #include <memory>
+#include <thread>
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr &viewer) {
 
@@ -134,7 +135,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer,
 
     Timer theTimer;
     // Filter the point cloud to remove points belonging to the car with lidar and outside the road
-    pcl::PointCloud<pcl::PointXYZI>::Ptr filteredCloud = processor.FilterCloud(inputCloud, .1, Eigen::Vector4f(-20, -6.5, -2, 1),
+    pcl::PointCloud<pcl::PointXYZI>::Ptr filteredCloud = processor.FilterCloud(inputCloud, .2, Eigen::Vector4f(-20, -6.5, -2, 1),
                                                Eigen::Vector4f(40, 7.1, 2, 1));
 
     std::cout << "Filtering took " << theTimer.fetch_and_restart() << " milliseconds" << std::endl;
@@ -242,6 +243,9 @@ int main(int argc, char **argv) {
             streamIterator = stream.begin();
 
         viewer->spinOnce();
+
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(1s);
         std::cout << "FPS=" << 1000. / theTimer.elapsed() << std::endl << std::endl;
     }
 }

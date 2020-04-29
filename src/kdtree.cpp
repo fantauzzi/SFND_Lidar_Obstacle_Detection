@@ -4,6 +4,7 @@
 #include "kdtree.h"
 #include <queue>
 #include <cmath>
+#include <cstddef>
 
 /** Returns the square Euclidean distance between two points. Points must have at least 3 dimensions; any dimension
  * after the 3rd is ignored (e.g. the I in an RGBI point).
@@ -84,7 +85,7 @@ std::vector<int> KdTree::search(std::vector<float> target, float distanceTol) {
         Node *pCurrent = item.first;
         int dimension = item.second;
         // Check if the node is in the cluster, in case add its id to `ids`
-        if (abs(pCurrent->point[dimension] - target[dimension]) <= distanceTol)
+        if (std::abs(pCurrent->point[dimension] - target[dimension]) <= distanceTol)
             if (sq_dist(pCurrent->point, target) <= sq_distanceTol)
                 ids.emplace_back(pCurrent->id);
         // Consider the children, schedule them for processing or prune them as necessary
