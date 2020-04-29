@@ -1,11 +1,15 @@
 #pragma once
 
 #include "processing.h"
+#include "kdtree.h"
 #include <algorithm>
 #include <chrono>
 #include <pcl/common/projection_matrix.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
+
+std::vector<std::vector<int>>
+euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree, float distanceTol);
 
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr>

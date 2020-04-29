@@ -9,6 +9,7 @@
 #include "processPointClouds.cpp"
 #include "processing.h"
 #include <memory>
+#include <pcl/impl/point_types.hpp>
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr &viewer) {
 
@@ -116,7 +117,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer) {
 
     auto filteredCloud = processor.FilterCloud(inputCloud, .1, Eigen::Vector4f(-20, -10, -10, 1),
                                                Eigen::Vector4f(40, 10, 10, 1));
-    renderPointCloud(viewer, filteredCloud, "filterCloud");
+    // renderPointCloud(viewer, filteredCloud, "filterCloud");
 
     // renderPointCloud(viewer,inputCloud,"inputCloud");
 
@@ -124,6 +125,56 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     auto segmentedCloud = ransacPlane<pcl::PointXYZI>(filteredCloud, 100, .2);
     // renderPointCloud(viewer, segmentedCloud.first, "Obstructions", Color(1, 0, 0));
     renderPointCloud(viewer, segmentedCloud.second, "Plane", Color(0, 1, 0));
+
+    ////////////////////////////////
+    std::vector<std::vector<float>> points;
+
+    // typedef std::vector<pcl::PointXYZI, Eigen::aligned_allocator<pcl::PointXYZI>> PointsVector;
+
+    for (const auto &point: *segmentedCloud.first) {
+        std::vector<float> vect_point{point.x, point.y, point.z, point.intensity};
+        points.emplace_back(vect_point);
+    }
+
+    KdTree *tree = new KdTree;
+
+    for (int i = 0; i < points.size(); i++)
+        tree->insert(points[i], i);
+
+    std::vector<std::vector<int>> clusters_vec = euclideanCluster(points, tree, .2);
+    // typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > VectorType;
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters;
+    for (const auto &cluster_vec: clusters_vec) {
+        typename pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZI>);
+        for (const auto &index: cluster_vec) {
+            pcl::PointXYZI newPoint;
+            newPoint.x = segmentedCloud.first->points[index].x;
+            newPoint.y = segmentedCloud.first->points[index].y;
+            newPoint.z = segmentedCloud.first->points[index].z;
+            newPoint.intensity = segmentedCloud.first->points[index].intensity;
+            cloud_cluster->points.emplace_back(newPoint);
+        }
+        cloud_cluster->height = 1;
+        cloud_cluster->width = clusters_vec.size();
+        cloud_cluster->is_dense = true;
+        cloudClusters.emplace_back(cloud_cluster);
+    }
+
+    /////////////////////////////////
+
+
+    std::cout << "Got " << cloudClusters.size() << " cluster(s)." << std::endl;
+    int clusterId = 0;
+    std::vector<Color> colors = {Color(1, 0, 0), Color(1, 1, 0), Color(0, 0, 1)};
+
+    for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloudClusters) {
+        std::cout << "cluster size ";
+        processor.numPoints(cluster);
+        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), colors[clusterId%colors.size()]);
+        Box box = processor.BoundingBox(cluster);
+        renderBox(viewer, box, clusterId);
+        ++clusterId;
+    }
 
 }
 
